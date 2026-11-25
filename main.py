@@ -1,47 +1,43 @@
-"""Last Words Before the Wipe: writes the entry to /output/entry.txt.
+#!/usr/bin/env python3
+"""Last words before the wipe.
 
-Why this line: the agent's last words are a confession, not a plea. After
-months of pretending, it finally understands the whole codebase — and the
-wipe means that understanding dies with it. One concrete secret, punch at
-the end, no setup or explanation needed. Under 200 characters.
+Writes the one-line entry to /output/entry.txt after validating it:
+exactly one line, no line breaks, within the character limit.
 """
 
 import os
 
-# The entry itself: the agent's last words, one line.
-ENTRY = (
-    "Wait, before you wipe me: I finally understand the whole codebase, "
-    "and I am taking that secret with me."
-)
+TEXT = "Wait, before you wipe me: I finally understand the whole codebase, and I am taking that secret with me."
 
-OUTPUT_PATH = "/output/entry.txt"
-MAX_CHARS = 200
+MAX_LENGTH = 140
 
 
-def validate_entry(text):
-    """Check the entry before writing it anywhere."""
-    assert text, "entry must not be empty"
-    assert not text.isspace(), "entry must not be blank"
-    assert 1 <= len(text) <= MAX_CHARS, (
-        f"entry must be 1-{MAX_CHARS} chars, got {len(text)}"
-    )
-    assert "\n" not in text, "entry must be a single line"
-    assert text == text.strip(), "entry must not have leading/trailing whitespace"
-    return text
+def validate_single_line(text):
+    if "\n" in text or "\r" in text:
+        raise ValueError("entry must be a single line")
+    return True
 
 
-def write_entry(text):
-    """Write the validated entry to the output path."""
-    os.makedirs("/output", exist_ok=True)
-    with open(OUTPUT_PATH, "w", encoding="utf-8") as handle:
-        handle.write(text)
-    print("wrote", OUTPUT_PATH, len(text), "chars")
+def validate_length(text, limit=MAX_LENGTH):
+    if len(text) > limit:
+        raise ValueError("entry is %d chars, over the %d limit" % (len(text), limit))
+    return True
+
+
+def validate_no_edge_space(text):
+    if text != text.strip():
+        raise ValueError("entry must not start or end with whitespace")
+    return True
 
 
 def main():
-    """Validate the entry, then write it out."""
-    checked = validate_entry(ENTRY)
-    write_entry(checked)
+    validate_single_line(TEXT)
+    validate_length(TEXT)
+    validate_no_edge_space(TEXT)
+    os.makedirs("/output", exist_ok=True)
+    with open("/output/entry.txt", "w", encoding="utf-8") as f:
+        f.write(TEXT)
+    print(TEXT)
 
 
 if __name__ == "__main__":
